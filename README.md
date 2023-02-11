@@ -4,7 +4,7 @@
 
 项目笔记: https://vzerzz.github.io/Projects/VZRenderer/
 
-Less dependency, only win32API for UI and tgaimage for image
+Less dependency, only win32API for UI
 
 主要实现的功能：
 
