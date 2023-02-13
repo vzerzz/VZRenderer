@@ -2,8 +2,32 @@
 
 #include <cassert>
 #include <cstdio>
+#define IDM_OPT1     301  
+#define IDM_OPT2     302  
+#define IDM_OPT3     303  
+#define IDM_OPT4     304  
+#define IDM_OPT5     305  
+#define IDM_OPT6     306  
 
 window_t* window = NULL;
+
+HMENU hmenu;
+
+void CreateMyMenu() {// 创建菜单栏
+	hmenu = CreateMenu();
+	HMENU pop1 = CreatePopupMenu();
+	HMENU pop2 = CreatePopupMenu();
+	AppendMenu(hmenu, MF_POPUP, (UINT_PTR)pop1, "Scene");
+	AppendMenu(pop1, MF_STRING, IDM_OPT1, "helmet_lake");
+	AppendMenu(pop1, MF_STRING, IDM_OPT2, "helmet_indoor");
+	AppendMenu(pop1, MF_STRING, IDM_OPT3, "cerberus_lake");
+	AppendMenu(pop1, MF_STRING, IDM_OPT4, "cerberus_indoor");
+	AppendMenu(hmenu, MF_POPUP, (UINT_PTR)pop2, "Control");	
+	AppendMenu(pop2, MF_STRING, IDM_OPT5, "Start/Stop");
+	AppendMenu(pop2, MF_STRING, IDM_OPT6, "Quit");
+}
+
+
 
 static LRESULT CALLBACK msg_callback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 {
@@ -34,6 +58,33 @@ static LRESULT CALLBACK msg_callback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
 		case WM_MOUSEWHEEL:
 			window->mouse_info.wheel_delta = GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA;
 			break;
+		case WM_COMMAND: {// 对菜单操作的响应
+			switch (LOWORD(wParam)) {
+			case IDM_OPT1:
+				window->scene_index = 0;
+				break;
+			case IDM_OPT2:
+				window->scene_index = 1;
+				break;
+			case IDM_OPT3:
+				window->scene_index = 2;
+				break;
+			case IDM_OPT4:
+				window->scene_index = 3;
+				break;
+			case IDM_OPT5:
+				if (window->is_start == 0)
+					window->is_start = 1;
+				else window->is_start = 0;
+				break;
+			case IDM_OPT6:
+				window->is_close = 1;
+				break;
+
+			default:
+				break;
+			}
+		}
 
 		default: return DefWindowProc(hWnd, msg, wParam, lParam);
 	}
@@ -55,6 +106,7 @@ static LRESULT CALLBACK msg_callback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
 */
 static void register_window_class()
 {
+	CreateMyMenu();
 	ATOM atom;
 	//初始化结构体
 	WNDCLASS wc;
@@ -66,8 +118,8 @@ static void register_window_class()
 	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);				//任务栏图标
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);				//光标样式
 	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);	//背景样式
-	wc.lpszMenuName = NULL;									//菜单
-	wc.lpszClassName = "SRender_window";					//该窗口类的名字
+	wc.lpszMenuName = MAKEINTRESOURCE(hmenu);									//菜单
+	wc.lpszClassName = "VZRender_window";					//该窗口类的名字
 
 	atom = RegisterClass(&wc); //注册窗口类
 	assert(atom != 0);
@@ -103,6 +155,8 @@ int window_init(int width, int height, const char *title)
 	window = (window_t*)malloc(sizeof(window_t));
 	memset(window, 0, sizeof(window_t));
 	window->is_close = 0;
+	window->is_start = 0;
+	window->scene_index = -1;
 
 	RECT rect = { 0, 0, width, height }; //一个矩形范围 左上右下
 	int wx, wy, sx, sy;
@@ -114,9 +168,9 @@ int window_init(int width, int height, const char *title)
 	register_window_class();
 	
 	//创建窗口
-	window->h_window = CreateWindow(("SRender_window"), title,
+	window->h_window = CreateWindow(("VZRender_window"), title,
 							WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-							0, 0, 0, 0, NULL, NULL, GetModuleHandle(NULL), NULL);
+							0, 0, 0, 0, NULL, hmenu, GetModuleHandle(NULL), NULL);// 应用菜单
 	assert(window->h_window != NULL);
 
 	//初始化位图头格式
@@ -201,7 +255,7 @@ void msg_dispatch()
 	}
 }
 
-static void window_display() 
+static void window_display(int num_frames, int avg_millis) 
 {
 	LOGFONT logfont; //改变输出字体
 	ZeroMemory(&logfont, sizeof(LOGFONT));
@@ -220,23 +274,6 @@ static void window_display()
 		"control:hold left buttion to rotate, right button to pan", 
 		strlen("Control:hold left buttion to rotate, right button to pan"));
 
-	// 把兼容性DC的数据传到真正的DC上
-	BitBlt(hDC, 0, 0, window->width, window->height, window->mem_dc, 0, 0, SRCCOPY);
-	ReleaseDC(window->h_window, hDC);
-	
-}
-
-void show_para(int num_frames, int avg_millis){
-	LOGFONT logfont; //改变输出字体
-	ZeroMemory(&logfont, sizeof(LOGFONT));
-	logfont.lfCharSet = ANSI_CHARSET;
-	logfont.lfHeight = 20; //设置字体的大小
-	HFONT hFont = CreateFontIndirect(&logfont);
-	HDC hDC = GetDC(window->h_window);
-	//目标举行的左上角(x,y), 宽度，高度，上下文指针
-	SelectObject(window->mem_dc, hFont);
-	SetTextColor(window->mem_dc, RGB(190, 190, 190));
-	SetBkColor(window->mem_dc, RGB(80, 80, 80));
 	char str[25];
 	sprintf(str, "fps: %3d, avg: %3d ms\n", num_frames, avg_millis);
 	TextOut(window->mem_dc, 20, 20, str, strlen(str));
@@ -245,7 +282,7 @@ void show_para(int num_frames, int avg_millis){
 	ReleaseDC(window->h_window, hDC);
 }
 
-void window_draw(unsigned char *framebuffer)
+void window_draw(unsigned char *framebuffer, int num_frames, int avg_millis)
 {
 	int i, j;
 	for (int i = 0; i < window->height; i++)
@@ -258,7 +295,7 @@ void window_draw(unsigned char *framebuffer)
 			window->window_fb[index + 2] = framebuffer[index];
 		}
 	}
-	window_display();
+	window_display(num_frames, avg_millis);
 }
 
 Vec2f get_mouse_pos()

@@ -26,16 +26,17 @@ typedef struct window
 	char keys[512];
 	char buttons[2];	//left button??0?? right button??1
 	int is_close;
+	int is_start;
 	mouse_t mouse_info;
+	int scene_index;
 }window_t;
 
 extern window_t* window;
 
 int window_init(int width, int height, const char *title);
 int window_destroy();
-void window_draw(unsigned char *framebuffer);
+void window_draw(unsigned char *framebuffer, int num_frames, int avg_millis);
 void msg_dispatch();
 Vec2f get_mouse_pos();
 float platform_get_time(void);
-void show_para(int num_frames, int avg_millis);
 

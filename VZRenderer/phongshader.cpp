@@ -42,7 +42,12 @@ Vec3f PhongShader::fragment_shader(float alpha, float beta, float gamma)
 	}
 
 	//Blinn-Phong 
-	light_t light{ Vec3f(0.05f, 0.05f, 0.05f), Vec3f(0.8f, 0.8f, 0.8f), Vec3f(0.5f, 0.5f, 0.5f), Vec3f(1.f, 1.f, 1.f) };
+	light_t light;
+	light.ambient = Vec3f(0.05f, 0.05f, 0.05f);
+	light.diffuse = Vec3f(0.8f, 0.8f, 0.8f);
+	light.specular = Vec3f(0.5f, 0.5f, 0.5f);
+	light.direction = Vec3f(1.f, 1.f, 1.f);
+
 	Vec3f ka(0.35f, 0.35f, 0.35f);
 	Vec3f kd = payload.model->texture->diffuse_sampling(texture_coord);
 	Vec3f ks(0.8f, 0.8f, 0.8f);

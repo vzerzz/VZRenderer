@@ -4,8 +4,6 @@
 
 项目笔记: https://vzerzz.github.io/Projects/VZRenderer/
 
-Less dependency, only win32API for UI
-
 主要实现的功能：
 
 - Basic Render pipeline
@@ -19,12 +17,12 @@ Less dependency, only win32API for UI
 - Cubemap skybox
 - Physically based rendering（PBR）
 - Image-based lighting（IBL）
+- Win32 api for UI
 
 待实现的功能(可能会实现):
 - MSAA等Anti-aliasing
 - 双线性及三线性插值
 - hdr
-- more UI
 - ...
 
 

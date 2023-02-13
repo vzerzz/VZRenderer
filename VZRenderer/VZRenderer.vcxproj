@@ -180,10 +180,14 @@
     <ClInclude Include="..\include\ibl.h" />
     <ClInclude Include="..\include\model.h" />
     <ClInclude Include="..\include\rasterizer.h" />
+    <ClInclude Include="..\include\scene.h" />
     <ClInclude Include="..\include\shader.h" />
     <ClInclude Include="..\include\texture.h" />
     <ClInclude Include="..\include\tgaimage.h" />
     <ClInclude Include="..\include\win.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="resource1.h" />
+    <ClInclude Include="resource2.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
@@ -194,6 +198,7 @@
     <ClCompile Include="pbrshader.cpp" />
     <ClCompile Include="phongshader.cpp" />
     <ClCompile Include="rasterizer.cpp" />
+    <ClCompile Include="scene.cpp" />
     <ClCompile Include="texture.cpp" />
     <ClCompile Include="skyboxshader.cpp" />
     <ClCompile Include="tgaimage.cpp" />
