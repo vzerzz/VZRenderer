@@ -38,5 +38,6 @@ public:
 	Vec3f cubemap_sampling(Vec3f world_pos);
 };
 
+// for ibl sampling
 Vec3f cubemap_sampling(cubemap_t* environmentmap_, Vec3f world_pos);
 Vec3f texture_sampling(TGAImage* image, Vec2f uv);

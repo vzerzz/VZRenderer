@@ -289,8 +289,8 @@ void BRDF_LUT()
 				color = IntegrateBRDF(0.002f, j / 256.0f);
 			else
 				color = IntegrateBRDF(i / 256.0f, j / 256.0f);
-			for (int i = 0; i < 3; i++)
-				color[i] = (color[i]*255.f < 255.f) ? color[i]*255.f : 255.f;
+			for (int k = 0; k < 3; k++)
+				color[k] = (color[k]*255.f < 255.f) ? color[k]*255.f : 255.f;
 
 			image.set(i, j, TGAColor(color.x, color.y, color.z));
 		}

@@ -35,12 +35,6 @@ float GeometrySchlickGGX(Vec3f n, Vec3f v, float roughness) {
 	float res = ndotv / (ndotv * (1 - k) + k);
 	return res;
 }
-float GeometrySchlickGGX_ibl(Vec3f n, Vec3f v, float roughness) {
-	float k = (roughness * roughness) / 2.0f;
-	float ndotv = std::max(dot(n, v), 0.0f);
-	float res = ndotv / (ndotv * (1 - k) + k);
-	return res;
-}
 // Smith’s method 同时考虑观察方向（几何遮蔽(Geometry Obstruction)）和光线方向向量（几何阴影(Geometry Shadowing)）
 float GeometrySmith(Vec3f n, Vec3f v, Vec3f l, float roughness) {
 	float ggx1 = GeometrySchlickGGX(n, l, roughness);
@@ -49,17 +43,17 @@ float GeometrySmith(Vec3f n, Vec3f v, Vec3f l, float roughness) {
 }
 
 // Fresnel-Schlick		F		因观察角度与反射平面方向的夹角而引起的反射程度不同
-// F0受金属工作流的影响 输入参数ndotv/ndoth 均可
-Vec3f FresenlSchlick(Vec3f n, Vec3f v, Vec3f& F0) {
-	float ndotv = std::max(dot(n, v), 0.0f);
-	return F0 + (Vec3f(1.0f, 1.0f, 1.0f) - F0) * pow(1.0f - ndotv, 5.0f);
+// F0受金属工作流的影响 
+Vec3f FresenlSchlick(Vec3f h, Vec3f v, Vec3f& F0) {
+	float hdotv = std::max(dot(h, v), 0.0f);
+	return F0 + (Vec3f(1.0f, 1.0f, 1.0f) - F0) * pow(1.0f - hdotv, 5.0f);
 }
 // Roughness 会引起反射率不同
-Vec3f FresenlSchlickRoughness(Vec3f n, Vec3f v, Vec3f& F0, float roughness) {
-	float ndotv = std::max(dot(n, v), 0.0f);
+Vec3f FresenlSchlickRoughness(Vec3f h, Vec3f v, Vec3f& F0, float roughness) {
+	float hdotv = std::max(dot(h, v), 0.0f);
 	float r = 1.f - roughness;
 	if (r < F0[0]) r = F0[0];
-	return F0 + (Vec3f(r, r, r) - F0) * pow(1.0f - ndotv, 5.0f);
+	return F0 + (Vec3f(r, r, r) - F0) * pow(1.0f - hdotv, 5.0f);
 }
 
 
@@ -117,7 +111,7 @@ Vec3f PBRShader::fragment_shader_direct(float alpha, float beta, float gamma)
 			// 金属流 F0会因为材料不同而不同且变色 认为大多数的绝缘体F0为0.04
 			Vec3f tempF = Vec3f(0.04f, 0.04f, 0.04f);
 			Vec3f F0 = tempF + (albedo - tempF) * metalness;
-			Vec3f F = FresenlSchlick(n, v, F0);
+			Vec3f F = FresenlSchlick(h, v, F0);
 
 			Vec3f Ks = F;
 			Vec3f Kd = (Vec3f(1.f, 1.f, 1.f) - Ks) * (1.f - metalness);// 金属不会折射

@@ -17,7 +17,7 @@
 - Cubemap skybox
 - Physically based rendering（PBR）
 - Image-based lighting（IBL）
-- Win32 api for UI
+- Win32 api for window and UI
 
 待实现的功能(可能会实现):
 - MSAA等Anti-aliasing

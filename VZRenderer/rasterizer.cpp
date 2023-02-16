@@ -111,7 +111,7 @@ int plane_clipping(clip_plane plane, int num_vert) {//对单个平面的裁剪
 
 int homo_clipping() {//对七个平面裁剪
 	int num_vert = 3;
-	num_vert = plane_clipping(W_PLANE, num_vert);//裁剪掉w大于等于0 的
+	num_vert = plane_clipping(W_PLANE, num_vert);//裁剪掉w小于等于0 的
 	num_vert = plane_clipping(X_RIGHT, num_vert);
 	num_vert = plane_clipping(X_LEFT, num_vert);
 	num_vert = plane_clipping(Y_TOP, num_vert);
