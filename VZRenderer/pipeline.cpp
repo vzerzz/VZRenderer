@@ -1,4 +1,4 @@
-#include "rasterizer.h"
+#include "pipeline.h"
 
 //---------------------clip---------------------------
 #define MAX_VERTEX 10
@@ -29,45 +29,45 @@ pass_attri_t pass_attri;
 bool is_inside_plane(clip_plane plane, Vec4f vertex) {// 判断是否在视锥内
 	switch (plane)
 	{
-		case W_PLANE:
-			return vertex.w <= -EPSILON;
-		case X_RIGHT:
-			return vertex.x >= vertex.w;
-		case X_LEFT:
-			return vertex.x <= -vertex.w;
-		case Y_TOP:
-			return vertex.y >= vertex.w;
-		case Y_BOTTOM:
-			return vertex.y <= -vertex.w;
-		case Z_NEAR:
-			return vertex.z >= vertex.w;
-		case Z_FAR:
-			return vertex.z <= -vertex.w;
-		default:
-			return 0;
+	case W_PLANE:
+		return vertex.w <= -EPSILON;
+	case X_RIGHT:
+		return vertex.x >= vertex.w;
+	case X_LEFT:
+		return vertex.x <= -vertex.w;
+	case Y_TOP:
+		return vertex.y >= vertex.w;
+	case Y_BOTTOM:
+		return vertex.y <= -vertex.w;
+	case Z_NEAR:
+		return vertex.z >= vertex.w;
+	case Z_FAR:
+		return vertex.z <= -vertex.w;
+	default:
+		return 0;
 	}
 }
 
-float get_intersect_ratio(Vec4f prev, Vec4f curv,clip_plane plane)// 求出插值系数
+float get_intersect_ratio(Vec4f prev, Vec4f curv, clip_plane plane)// 求出插值系数
 {
-	switch (plane) 
+	switch (plane)
 	{
-		case W_PLANE:
-			return (prev.w + EPSILON) / (prev.w - curv.w);
-		case X_RIGHT:
-			return (prev.w - prev.x) / ((prev.w - prev.x) - (curv.w - curv.x));
-		case X_LEFT:
-			return (prev.w + prev.x) / ((prev.w + prev.x) - (curv.w + curv.x));
-		case Y_TOP:
-			return (prev.w - prev.y) / ((prev.w - prev.y) - (curv.w - curv.y));
-		case Y_BOTTOM:
-			return (prev.w + prev.y) / ((prev.w + prev.y) - (curv.w + curv.y));
-		case Z_NEAR:
-			return (prev.w - prev.z) / ((prev.w - prev.z) - (curv.w - curv.z));
-		case Z_FAR:
-			return (prev.w + prev.z) / ((prev.w + prev.z) - (curv.w + curv.z));
-		default:
-			return 0;
+	case W_PLANE:
+		return (prev.w + EPSILON) / (prev.w - curv.w);
+	case X_RIGHT:
+		return (prev.w - prev.x) / ((prev.w - prev.x) - (curv.w - curv.x));
+	case X_LEFT:
+		return (prev.w + prev.x) / ((prev.w + prev.x) - (curv.w + curv.x));
+	case Y_TOP:
+		return (prev.w - prev.y) / ((prev.w - prev.y) - (curv.w - curv.y));
+	case Y_BOTTOM:
+		return (prev.w + prev.y) / ((prev.w + prev.y) - (curv.w + curv.y));
+	case Z_NEAR:
+		return (prev.w - prev.z) / ((prev.w - prev.z) - (curv.w - curv.z));
+	case Z_FAR:
+		return (prev.w + prev.z) / ((prev.w + prev.z) - (curv.w + curv.z));
+	default:
+		return 0;
 	}
 }
 
@@ -130,72 +130,12 @@ Vec3f barycentric(Vec3f* pts, Vec2f p) {
 	return Vec3f(1.f - (b.x + b.y) / b.z, b.x / b.z, b.y / b.z);
 }
 
-
-void rasterize(unsigned char* framebuffer, Vec4f* clip_coords, float* zbuffer, IShader& shader)
+void DrawCall(unsigned char* framebuffer, float* zbuffer, IShader& shader, int nface)
 {
-	Vec3f ndc_coords[3];
-	Vec3f screen_coords[3];
-	bool skybox = shader.payload.model->skybox;
-
-	// 透视除法
-	for (int i = 0; i < 3; i++)
-	{
-		ndc_coords[i][0] = clip_coords[i][0] / clip_coords[i].w;
-		ndc_coords[i][1] = clip_coords[i][1] / clip_coords[i].w;
-		ndc_coords[i][2] = clip_coords[i][2] / clip_coords[i].w;
-	}
-
-	// viewport
-	for (int i = 0; i < 3; i++)
-	{
-		screen_coords[i][0] = 0.5 * (WINDOW_WIDTH - 1) * (ndc_coords[i][0] + 1);
-		screen_coords[i][1] = 0.5 * (WINDOW_HEIGHT - 1) * (ndc_coords[i][1] + 1);
-		screen_coords[i][2] = skybox ? 1000 : -clip_coords[i].w;// clip中w=z ndc中z为1 无价值
-	}
-	// backface clip
-	if (!skybox) {
-		float backface = ndc_coords[0].x * ndc_coords[1].y - ndc_coords[0].y * ndc_coords[1].x + ndc_coords[1].x * ndc_coords[2].y - ndc_coords[1].y * ndc_coords[2].x + ndc_coords[2].x * ndc_coords[0].y - ndc_coords[2].y * ndc_coords[0].x;
-		if (backface <= 0) return;
-	}
-
-	// bounding box
-	Vec2f bboxmin(WINDOW_WIDTH - 1, WINDOW_HEIGHT - 1);
-	Vec2f bboxmax(0, 0);
-	Vec2f clamp(WINDOW_WIDTH - 1, WINDOW_HEIGHT - 1);
+	/* Geometry Stage */
 	for (int i = 0; i < 3; i++) {
-		bboxmin.x = std::max(0.f, std::min(bboxmin.x, screen_coords[i].x));
-		bboxmin.y = std::max(0.f, std::min(bboxmin.y, screen_coords[i].y));
-		bboxmax.x = std::min(clamp.x, std::max(bboxmax.x, screen_coords[i].x));
-		bboxmax.y = std::min(clamp.y, std::max(bboxmax.y, screen_coords[i].y));
-	}
-
-	// rasterization
-	for (int x = bboxmin.x; x <= bboxmax.x; x++)
-		for (int y = bboxmin.y; y <= bboxmax.y; y++) {
-			Vec3f bc_screen = barycentric(screen_coords, Vec2f(x+0.5f, y+0.5f));
-			float alpha = bc_screen.x; float beta = bc_screen.y; float gamma = bc_screen.z;
-			// inside triangle
-			if (alpha < -EPSILON || beta < -EPSILON || gamma < -EPSILON) continue;
-			
-			float Z = 1.f / (alpha / clip_coords[0].w + beta / clip_coords[1].w + gamma / clip_coords[2].w);
-			float z = (screen_coords[0].z * (alpha / clip_coords[0].w) + screen_coords[1].z * (beta / clip_coords[1].w) + screen_coords[2].z * (gamma / clip_coords[2].w)) * Z;
-			int index = (WINDOW_HEIGHT - y - 1) * WINDOW_WIDTH + x;
-			if (z < zbuffer[index]) {
-				zbuffer[index] = z;
-				
-				Vec3f color = shader.fragment_shader(alpha, beta, gamma);
-				int index = ((WINDOW_HEIGHT - y - 1) * WINDOW_WIDTH + x) * 4; // the origin for pixel is bottom-left, but the framebuffer index counts from top-left
-				for (int i = 0; i < 3; i++)
-					framebuffer[index + i] = color[i];
-				//image.set(x, y, TGAColor(color[0], color[1], color[2]));
-			}
-		}
-}
-
-void draw(unsigned char* framebuffer, float* zbuffer, IShader& shader, int nface)
-{
-	for (int i = 0; i < 3; i++) {
-		shader.vertex_shader(nface, i);// vertex shader
+		// Vertex Shaders
+		shader.vertex_shader(nface, i);
 		pass_attri.in_clip[i] = shader.payload.clip_coords[i];
 		pass_attri.in_normal[i] = shader.payload.normals[i];
 		pass_attri.in_texture[i] = shader.payload.texture_coords[i];
@@ -203,22 +143,81 @@ void draw(unsigned char* framebuffer, float* zbuffer, IShader& shader, int nface
 	}
 	// homogeneous clipping
 	int num_vert = homo_clipping();// 返回三角面经切割后的顶点数
-	// obj文件中面要均为三角面 (;_;)
 	for (int i = 0; i < num_vert - 2; i++) {//顶点数一般为3或4 3则直接赋值 4分割成两个三角面再光栅化
 		shader.payload.clip_coords[0] = pass_attri.out_clip[0];
-		shader.payload.clip_coords[1] = pass_attri.out_clip[i+1];
-		shader.payload.clip_coords[2] = pass_attri.out_clip[i+2];
+		shader.payload.clip_coords[1] = pass_attri.out_clip[i + 1];
+		shader.payload.clip_coords[2] = pass_attri.out_clip[i + 2];
 		shader.payload.world_coords[0] = pass_attri.out_world[0];
-		shader.payload.world_coords[1] = pass_attri.out_world[i+1];
-		shader.payload.world_coords[2] = pass_attri.out_world[i+2];
+		shader.payload.world_coords[1] = pass_attri.out_world[i + 1];
+		shader.payload.world_coords[2] = pass_attri.out_world[i + 2];
 		shader.payload.normals[0] = pass_attri.out_normal[0];
-		shader.payload.normals[1] = pass_attri.out_normal[i+1];
-		shader.payload.normals[2] = pass_attri.out_normal[i+2];
+		shader.payload.normals[1] = pass_attri.out_normal[i + 1];
+		shader.payload.normals[2] = pass_attri.out_normal[i + 2];
 		shader.payload.texture_coords[0] = pass_attri.out_texture[0];
-		shader.payload.texture_coords[1] = pass_attri.out_texture[i+1];
-		shader.payload.texture_coords[2] = pass_attri.out_texture[i+2];
+		shader.payload.texture_coords[1] = pass_attri.out_texture[i + 1];
+		shader.payload.texture_coords[2] = pass_attri.out_texture[i + 2];
 
-		rasterize(framebuffer, shader.payload.clip_coords, zbuffer, shader);
+		Vec4f* clip_coords = shader.payload.clip_coords;
+		Vec3f ndc_coords[3];
+		Vec3f screen_coords[3];
+		bool skybox = shader.payload.model->skybox;
+
+		// 透视除法
+		for (int i = 0; i < 3; i++)
+		{
+			ndc_coords[i][0] = clip_coords[i][0] / clip_coords[i].w;
+			ndc_coords[i][1] = clip_coords[i][1] / clip_coords[i].w;
+			ndc_coords[i][2] = clip_coords[i][2] / clip_coords[i].w;
+		}
+
+		// Screen Mapping
+		for (int i = 0; i < 3; i++)
+		{
+			screen_coords[i][0] = 0.5 * (WINDOW_WIDTH - 1) * (ndc_coords[i][0] + 1);
+			screen_coords[i][1] = 0.5 * (WINDOW_HEIGHT - 1) * (ndc_coords[i][1] + 1);
+			screen_coords[i][2] = skybox ? 1000 : -clip_coords[i].w;// clip中w=z ndc中z为1 无价值
+		}
+		// backface clip
+		if (!skybox) {
+			float backface = ndc_coords[0].x * ndc_coords[1].y - ndc_coords[0].y * ndc_coords[1].x + ndc_coords[1].x * ndc_coords[2].y - ndc_coords[1].y * ndc_coords[2].x + ndc_coords[2].x * ndc_coords[0].y - ndc_coords[2].y * ndc_coords[0].x;
+			if (backface <= 0) return;
+		}
+		
+		/* Rasterization Stage */
+		// bounding box
+		Vec2f bboxmin(WINDOW_WIDTH - 1, WINDOW_HEIGHT - 1);
+		Vec2f bboxmax(0, 0);
+		Vec2f clamp(WINDOW_WIDTH - 1, WINDOW_HEIGHT - 1);
+		for (int i = 0; i < 3; i++) {
+			bboxmin.x = std::max(0.f, std::min(bboxmin.x, screen_coords[i].x));
+			bboxmin.y = std::max(0.f, std::min(bboxmin.y, screen_coords[i].y));
+			bboxmax.x = std::min(clamp.x, std::max(bboxmax.x, screen_coords[i].x));
+			bboxmax.y = std::min(clamp.y, std::max(bboxmax.y, screen_coords[i].y));
+		}
+
+		// Primitive Assembly
+		for (int x = bboxmin.x; x <= bboxmax.x; x++)
+			for (int y = bboxmin.y; y <= bboxmax.y; y++) {
+				Vec3f bc_screen = barycentric(screen_coords, Vec2f(x + 0.5f, y + 0.5f));
+				float alpha = bc_screen.x; float beta = bc_screen.y; float gamma = bc_screen.z;
+				// inside triangle
+				if (alpha < -EPSILON || beta < -EPSILON || gamma < -EPSILON) continue;
+				
+				/* Pixel Processing Stage */
+				float Z = 1.f / (alpha / clip_coords[0].w + beta / clip_coords[1].w + gamma / clip_coords[2].w);
+				float z = (screen_coords[0].z * (alpha / clip_coords[0].w) + screen_coords[1].z * (beta / clip_coords[1].w) + screen_coords[2].z * (gamma / clip_coords[2].w)) * Z;
+				int index = (WINDOW_HEIGHT - y - 1) * WINDOW_WIDTH + x;
+				if (z < zbuffer[index]) {
+					zbuffer[index] = z;
+
+					Vec3f color = shader.fragment_shader(alpha, beta, gamma);
+					int index = ((WINDOW_HEIGHT - y - 1) * WINDOW_WIDTH + x) * 4; // the origin for pixel is bottom-left, but the framebuffer index counts from top-left
+					for (int i = 0; i < 3; i++)
+						framebuffer[index + i] = color[i];
+					//image.set(x, y, TGAColor(color[0], color[1], color[2]));
+				}
+			}
+
 	}
 
 }

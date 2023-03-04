@@ -58,7 +58,7 @@ void load_ibl_map(payload_t &p, const char* env_path)
 
 }
 
-void helmet_lake_scene(Model** model, int& m, IShader** model_shader, IShader** skybox_shader, Camera* camera)
+void Scene::helmet_lake_scene()
 {
 	m = 2;
 	const char* model_name[] = {
@@ -68,18 +68,19 @@ void helmet_lake_scene(Model** model, int& m, IShader** model_shader, IShader** 
 	model[0] = new Model(model_name[0], false);
 	model[1] = new Model(model_name[1], true);
 
-	IShader* modelshader = new PBRShader();
-	IShader* skyboxshader = new SkyboxShader();
-	modelshader->payload.camera = camera;
-	skyboxshader->payload.camera = camera;
+	IShader* model_shader = new PBRShader();
+	IShader* skybox_shader = new SkyboxShader();
+	model_shader->payload.camera = camera;
+	skybox_shader->payload.camera = camera;
 
-	load_ibl_map(modelshader->payload, "..\\..\\obj\\lake\\preprocessing");
+	load_ibl_map(model_shader->payload, "..\\..\\obj\\lake\\preprocessing");
 
-	*model_shader = modelshader;
-	*skybox_shader = skyboxshader;
+	*_model_shader = model_shader;
+	*_skybox_shader = skybox_shader;
+
 }
 
-void helmet_indoor_scene(Model** model, int& m, IShader** model_shader, IShader** skybox_shader, Camera* camera)
+void Scene::helmet_indoor_scene()
 {
 	m = 2;
 	const char* model_name[] = {
@@ -89,19 +90,18 @@ void helmet_indoor_scene(Model** model, int& m, IShader** model_shader, IShader*
 	model[0] = new Model(model_name[0], false);
 	model[1] = new Model(model_name[1], true);
 
-	IShader* modelshader = new PBRShader();
-	IShader* skyboxshader = new SkyboxShader();
-	modelshader->payload.camera = camera;
-	skyboxshader->payload.camera = camera;
+	IShader* model_shader = new PBRShader();
+	IShader* skybox_shader = new SkyboxShader();
+	model_shader->payload.camera = camera;
+	skybox_shader->payload.camera = camera;
 
-	load_ibl_map(modelshader->payload, "..\\..\\obj\\indoor\\preprocessing");
+	load_ibl_map(model_shader->payload, "..\\..\\obj\\indoor\\preprocessing");
 
-	*model_shader = modelshader;
-	*skybox_shader = skyboxshader;
-
+	*_model_shader = model_shader;
+	*_skybox_shader = skybox_shader;
 }
 
-void cerberus_lake_scene(Model** model, int& m, IShader** model_shader, IShader** skybox_shader, Camera* camera)
+void Scene::cerberus_lake_scene()
 {
 	m = 2;
 	const char* model_name[] = {
@@ -111,19 +111,18 @@ void cerberus_lake_scene(Model** model, int& m, IShader** model_shader, IShader*
 	model[0] = new Model(model_name[0], false);
 	model[1] = new Model(model_name[1], true);
 
-	IShader* modelshader = new PBRShader();
-	IShader* skyboxshader = new SkyboxShader();
-	modelshader->payload.camera = camera;
-	skyboxshader->payload.camera = camera;
+	IShader* model_shader = new PBRShader();
+	IShader* skybox_shader = new SkyboxShader();
+	model_shader->payload.camera = camera;
+	skybox_shader->payload.camera = camera;
 
-	load_ibl_map(modelshader->payload, "..\\..\\obj\\lake\\preprocessing");
+	load_ibl_map(model_shader->payload, "..\\..\\obj\\lake\\preprocessing");
 
-	*model_shader = modelshader;
-	*skybox_shader = skyboxshader;
-
+	*_model_shader = model_shader;
+	*_skybox_shader = skybox_shader;
 }
 
-void cerberus_indoor_scene(Model** model, int& m, IShader** model_shader, IShader** skybox_shader, Camera* camera)
+void Scene::cerberus_indoor_scene()
 {
 	m = 2;
 	const char* model_name[] = {
@@ -133,14 +132,29 @@ void cerberus_indoor_scene(Model** model, int& m, IShader** model_shader, IShade
 	model[0] = new Model(model_name[0], false);
 	model[1] = new Model(model_name[1], true);
 
-	IShader* modelshader = new PBRShader();
-	IShader* skyboxshader = new SkyboxShader();
-	modelshader->payload.camera = camera;
-	skyboxshader->payload.camera = camera;
+	IShader* model_shader = new PBRShader();
+	IShader* skybox_shader = new SkyboxShader();
+	model_shader->payload.camera = camera;
+	skybox_shader->payload.camera = camera;
 
-	load_ibl_map(modelshader->payload, "..\\..\\obj\\indoor\\preprocessing");
+	load_ibl_map(model_shader->payload, "..\\..\\obj\\indoor\\preprocessing");
 
-	*model_shader = modelshader;
-	*skybox_shader = skyboxshader;
+	*_model_shader = model_shader;
+	*_skybox_shader = skybox_shader;
+}
+
+Scene::~Scene()
+{
+	for (int i = 0; i < m; i++) if (model[i] != nullptr) { delete model[i]; model[i] = nullptr; }
+	IShader* model_shader = *_model_shader;
+	IShader* skybox_shader = *_skybox_shader;
+	delete[] model_shader->payload.iblmap->irradiance_map->faces;
+	for (int i = 0; i <  model_shader->payload.iblmap->mip_levels; i++) 
+		delete[] model_shader->payload.iblmap->prefilter_maps[i]->faces;
+	delete model_shader->payload.iblmap->brdf_lut;
+	delete model_shader->payload.iblmap;
+	if (model_shader != nullptr) { delete model_shader; model_shader = nullptr; }
+	if (skybox_shader != nullptr) { delete skybox_shader; skybox_shader = nullptr; }
 
 }
+

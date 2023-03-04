@@ -44,7 +44,8 @@ void set_normal_coord(int face_id, int x, int y, float& x_coord, float& y_coord,
 /* diffuse part */
 // 漫反射的积分区域为一个半球 对所有的着色点以法线形成一个半球求半球的平均辐射度 预计算至irradiance_map中
 void generate_irradiance_map(int face_id, TGAImage& image) {
-	Texture* irradiancemap = new Texture("..\\..\\obj\\lake\\lake.obj", true);// 预处理所以单独提前读取处理
+	std::unique_ptr<Texture> irradiancemap = std::make_unique<Texture>("..\\..\\obj\\lake\\lake.obj", true);// 预处理所以单独提前读取处理
+
 	for (int x = 0; x < 256; x++)
 		for (int y = 0; y < 256; y++) {// irradiancemap 每个面大小为255*255
 			float x_coord, y_coord, z_coord;
@@ -142,7 +143,7 @@ Vec3f ImportanceSampleGGX(Vec2f Xi, Vec3f N, float roughness)
 
 void generate_prefilter_map(int face_id, int mip_level, TGAImage& image)
 {
-	Texture* prefiltermap = new Texture("..\\..\\obj\\lake\\lake.obj", true);// 预处理所以单独提前读取处理
+	std::unique_ptr<Texture> prefiltermap = std::make_unique<Texture>("..\\..\\obj\\lake\\lake.obj", true);// 预处理所以单独提前读取处理
 	// mipmap 大小
 	int	factor = pow(2, mip_level);
 	int width = 512 / factor;

@@ -7,18 +7,11 @@
 #include "geometry.h"
 #include "shader.h"
 #include "camera.h"
-#include "rasterizer.h"
+#include "pipeline.h"
 #include "win.h"
 #include "ibl.h"
 #include "scene.h"
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )//不显示控制台
-
-const scene_t Scenes[]{
-	{"helmet_lake", helmet_lake_scene},
-	{"helmet_indoor", helmet_indoor_scene},
-	{"cerberus_lake", cerberus_lake_scene},
-	{"cerberus_indoor", cerberus_indoor_scene}
-};
 
 #define MAX_MODEL_NUM 10
 
@@ -31,15 +24,13 @@ const scene_t Scenes[]{
 
 
 int main(int argc, char** argv) {
-
-
 	window_init(WINDOW_WIDTH, WINDOW_HEIGHT, "VZRenderer");
 	Camera* camera = new Camera(Vec3f(0, 1, 5), Vec3f(0, 1, 0), Vec3f(0, 1, 0), (float)WINDOW_WIDTH / WINDOW_HEIGHT);
 	unsigned char* framebuffer = new unsigned char[WINDOW_HEIGHT * WINDOW_WIDTH * 4];
 	float* zbuffer = new float[WINDOW_WIDTH * WINDOW_HEIGHT];
 
-	IShader* model_shader;
-	IShader* skybox_shader;
+	IShader* model_shader = nullptr;
+	IShader* skybox_shader = nullptr;
 	Model* model[MAX_MODEL_NUM];
 	int model_num = 0;
 
@@ -47,7 +38,7 @@ int main(int argc, char** argv) {
 		// load scene
 		*camera = Camera(Vec3f(0, 1, 5), Vec3f(0, 1, 0), Vec3f(0, 1, 0), (float)WINDOW_WIDTH / WINDOW_HEIGHT);
 		if (window->scene_index != -1) {
-			Scenes[window->scene_index].build_scene(model, model_num, &model_shader, &skybox_shader, camera);
+			Scene s(model, model_num, &model_shader, &skybox_shader, camera, window->scene_index);
 			// Render loop
 			int num_frames = 0;
 			float print_time = platform_get_time();
@@ -80,18 +71,18 @@ int main(int argc, char** argv) {
 				viewMatrix[1][3] = 0;
 				viewMatrix[2][3] = 0;
 				skybox_shader->payload.mvpMatrix = perspectiveMatrix * viewMatrix;
-
+				
 				//draw
 				for (int j = 0; j < model_num; j++) {
 					if (!model[j]->skybox) {
 						model_shader->payload.model = model[j];
 						for (int i = 0; i < model[j]->nfaces(); i++)
-							draw(framebuffer, zbuffer, *model_shader, i);
+							DrawCall(framebuffer, zbuffer, *model_shader, i);
 					}
 					else {
 						skybox_shader->payload.model = model[j];
 						for (int i = 0; i < model[j]->nfaces(); i++)
-							draw(framebuffer, zbuffer, *skybox_shader, i);
+							DrawCall(framebuffer, zbuffer, *skybox_shader, i);
 					}
 				}
 
@@ -114,9 +105,6 @@ int main(int argc, char** argv) {
 				window_draw(framebuffer, show_num, show_avg);
 				msg_dispatch();
 			}
-			for (int i = 0; i < model_num; i++) if (model[i] != nullptr) { delete model[i]; model[i] = nullptr; }
-			if (model_shader != nullptr) { delete model_shader; model_shader = nullptr; }
-			if (skybox_shader != nullptr) { delete skybox_shader; skybox_shader = nullptr; }
 		}
 		msg_dispatch();
 	}

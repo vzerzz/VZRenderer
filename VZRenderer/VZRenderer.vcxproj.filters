@@ -27,7 +27,7 @@
     <ClInclude Include="..\include\camera.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\rasterizer.h">
+    <ClInclude Include="..\include\pipeline.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\include\shader.h">
@@ -62,7 +62,7 @@
     <ClCompile Include="phongshader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="rasterizer.cpp">
+    <ClCompile Include="pipeline.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="win.cpp">

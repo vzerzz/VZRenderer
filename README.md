@@ -21,9 +21,14 @@
 
 待实现的功能(可能会实现):
 - MSAA等Anti-aliasing
-- 双线性及三线性插值
-- hdr
+- Shadow
 - ...
+
+效果展示:  
+![helmet-lake](./image/1.png)  
+![helmet-indoor](./image/2.png)  
+![cerberus-lake](./image/3.png)  
+![cerberus-indoor](./image/4.png)  
 
 
 本项目主要用于学习以及实践所学知识 参照了tinyrenderer https://github.com/ssloy/tinyrenderer 以及 [@孙小磊](https://www.zhihu.com/people/sun-lei-22-19/posts) https://github.com/SunXLei/SRender 等大佬的作品 以及 https://learnopengl-cn.github.io/ 受益匪浅 十分感谢

@@ -83,3 +83,7 @@ std::vector<int> Model::face(int idx) {
 	for (int i = 0; i < (int)faces_[idx].size(); i++) face.push_back(faces_[idx][i][0]);
 	return face;
 }
+
+Model::~Model() {
+	delete texture;
+}

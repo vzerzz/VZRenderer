@@ -25,4 +25,6 @@ public:
 	std::vector<int> face(int idx);
 	// texture中通过uv坐标查找属性为采样 在sampling中
 	Texture* texture;
+
+	~Model();
 };

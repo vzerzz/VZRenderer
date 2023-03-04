@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include "tgaimage.h"
 #include "geometry.h"
 #include "texture.h"
