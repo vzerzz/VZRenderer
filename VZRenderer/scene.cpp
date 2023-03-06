@@ -70,7 +70,9 @@ void Scene::helmet_lake_scene()
 
 	IShader* model_shader = new PBRShader();
 	IShader* skybox_shader = new SkyboxShader();
+	Matrix modelMatrix = Matrix::identity(4); for (int i = 0; i < 3; i++) modelMatrix[i][i] = 1.f;
 	model_shader->payload.camera = camera;
+	model_shader->payload.modelMatrix = modelMatrix;
 	skybox_shader->payload.camera = camera;
 
 	load_ibl_map(model_shader->payload, "..\\..\\obj\\lake\\preprocessing");
@@ -92,7 +94,9 @@ void Scene::helmet_indoor_scene()
 
 	IShader* model_shader = new PBRShader();
 	IShader* skybox_shader = new SkyboxShader();
+	Matrix modelMatrix = Matrix::identity(4); for (int i = 0; i < 3; i++) modelMatrix[i][i] = 1.f;
 	model_shader->payload.camera = camera;
+	model_shader->payload.modelMatrix = modelMatrix;
 	skybox_shader->payload.camera = camera;
 
 	load_ibl_map(model_shader->payload, "..\\..\\obj\\indoor\\preprocessing");
@@ -113,7 +117,9 @@ void Scene::cerberus_lake_scene()
 
 	IShader* model_shader = new PBRShader();
 	IShader* skybox_shader = new SkyboxShader();
+	Matrix modelMatrix = Matrix::identity(4); for (int i = 0; i < 3; i++) modelMatrix[i][i] = 1.f;
 	model_shader->payload.camera = camera;
+	model_shader->payload.modelMatrix = modelMatrix;
 	skybox_shader->payload.camera = camera;
 
 	load_ibl_map(model_shader->payload, "..\\..\\obj\\lake\\preprocessing");
@@ -134,7 +140,9 @@ void Scene::cerberus_indoor_scene()
 
 	IShader* model_shader = new PBRShader();
 	IShader* skybox_shader = new SkyboxShader();
+	Matrix modelMatrix = Matrix::identity(4); for (int i = 0; i < 3; i++) modelMatrix[i][i] = 1.f;
 	model_shader->payload.camera = camera;
+	model_shader->payload.modelMatrix = modelMatrix;
 	skybox_shader->payload.camera = camera;
 
 	load_ibl_map(model_shader->payload, "..\\..\\obj\\indoor\\preprocessing");

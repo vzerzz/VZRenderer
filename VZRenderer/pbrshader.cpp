@@ -96,6 +96,9 @@ Vec3f PBRShader::fragment_shader_direct(float alpha, float beta, float gamma)
 	float ao = payload.model->texture->occlusion_sampling(texture_coord);
 	Vec3f albedo = payload.model->texture->diffuse_sampling(texture_coord);//金属表面颜色
 	Vec3f emission = payload.model->texture->emission_sampling(texture_coord);
+	albedo = Vec3f(std::pow(albedo[0], 2.2f), std::pow(albedo[1], 2.2f), std::pow(albedo[2], 2.2f));
+	emission = Vec3f(std::pow(emission[0], 2.2f), std::pow(emission[1], 2.2f), std::pow(emission[2], 2.2f));
+
 	Vec3f color(0, 0, 0);
 
 	Vec3f n = normal.normalize();
@@ -160,6 +163,10 @@ Vec3f PBRShader::fragment_shader(float alpha, float beta, float gamma)
 	float ao = payload.model->texture->occlusion_sampling(texture_coord);
 	Vec3f albedo = payload.model->texture->diffuse_sampling(texture_coord);//金属表面颜色
 	Vec3f emission = payload.model->texture->emission_sampling(texture_coord);
+	// Gamma Correction Removed
+	// 将纹理都转为线性空间
+	albedo = Vec3f(std::pow(albedo[0], 2.2f), std::pow(albedo[1], 2.2f), std::pow(albedo[2], 2.2f));
+	emission = Vec3f(std::pow(emission[0], 2.2f), std::pow(emission[1], 2.2f), std::pow(emission[2], 2.2f));
 	Vec3f color(0, 0, 0);
 
 	Vec3f n = normal.normalize();

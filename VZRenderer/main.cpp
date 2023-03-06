@@ -61,11 +61,10 @@ int main(int argc, char** argv) {
 				handle_events(*camera);
 
 				// update Matrix
-				Matrix modelMatrix = Matrix::identity(4); for (int i = 0; i < 3; i++) modelMatrix[i][i] = 1;
 				Matrix viewMatrix = ViewMatrix(camera);
 				Matrix perspectiveMatrix = PerspectiveMatrix(60, (float)WINDOW_WIDTH / WINDOW_HEIGHT, -0.3, -30000);
 
-				model_shader->payload.mvpMatrix = perspectiveMatrix * viewMatrix * modelMatrix;
+				model_shader->payload.mvpMatrix = perspectiveMatrix * viewMatrix * model_shader->payload.modelMatrix;
 
 				viewMatrix[0][3] = 0;
 				viewMatrix[1][3] = 0;

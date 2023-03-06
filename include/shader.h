@@ -24,6 +24,7 @@ typedef struct {
 	//在main中赋值
 	Model* model;
 	Camera* camera;
+	Matrix modelMatrix;
 	Matrix mvpMatrix;
 	//vertexshader中赋值
 	//vertex attribute

@@ -48,8 +48,8 @@ Model::Model(const char* filename, bool isskybox) : skybox(isskybox), verts_(), 
 		}
 	}
 	//std::cerr << "# v# " << verts_.size() << " f# " << faces_.size() << " vt# " << uvs_.size() << " vn# " << norms_.size() << std::endl;
+	//texture = std::make_unique<Texture>(filename, isskybox);
 	texture = new Texture(filename, isskybox);
-
 }
 
 int Model::nverts() {
@@ -84,6 +84,3 @@ std::vector<int> Model::face(int idx) {
 	return face;
 }
 
-Model::~Model() {
-	delete texture;
-}
