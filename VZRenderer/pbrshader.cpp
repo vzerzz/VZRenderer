@@ -184,8 +184,6 @@ Vec3f PBRShader::fragment_shader(float alpha, float beta, float gamma)
 		// diffuse part
 		cubemap_t* irradiance_map = payload.iblmap->irradiance_map;
 		Vec3f irradiance = cubemap_sampling(irradiance_map, n);
-		for (int i = 0; i < 3; i++)
-			irradiance[i] = pow(irradiance[i], 2.0f);
 		Vec3f diffuse = irradiance * Kd * albedo;
 
 		// specular part
@@ -198,8 +196,6 @@ Vec3f PBRShader::fragment_shader(float alpha, float beta, float gamma)
 		float max_mip_level = (float)(payload.iblmap->mip_levels - 1);
 		int specular_miplevel = (int)(roughness * max_mip_level + 0.5f);
 		Vec3f prefilter_color = cubemap_sampling(payload.iblmap->prefilter_maps[specular_miplevel], l);
-		for (int i = 0; i < 3; i++)
-			prefilter_color[i] = pow(prefilter_color[i], 2.0f);
 		specular = (prefilter_color * specular);
 
 		color = (diffuse + specular) + emission;
